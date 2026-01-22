@@ -3,54 +3,147 @@ package com.example.firstapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 
-// Data class for news
-data class News(val title: String, val description: String)
-
-// Main activity
 class MainActivity : ComponentActivity() {
-    private val newsList = listOf(
-        News("Title 1", "Description 1"),
-        News("Title 2", "Description 2"),
-        News("Title 3", "Description 3")
-    )
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            NewsList(newsList)
+            AppRoot()
         }
     }
 }
 
-// Composable function to display news
+// -------- App State & Navigation --------
+
+enum class Screen {
+    LOGIN, HOME
+}
+
 @Composable
-fun NewsList(news: List<News>) {
-    LazyColumn {
-        items(news) { item ->
-            Column {
-                Text(text = item.title, style = MaterialTheme.typography.titleMedium)
-                Text(text = item.description, style = MaterialTheme.typography.bodyMedium)
+fun AppRoot() {
+    var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
+
+    when (currentScreen) {
+        Screen.LOGIN -> LoginScreen(onLoginSuccess = { currentScreen = Screen.HOME })
+        Screen.HOME -> HomeScreen()
+    }
+}
+
+// -------- Login Screen --------
+
+@Composable
+fun LoginScreen(onLoginSuccess: () -> Unit) {
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Login", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                if (username.isNotBlank() && password.isNotBlank()) {
+                    onLoginSuccess()
+                }
+            }
+        ) {
+            Text("Login")
+        }
+    }
+}
+
+// -------- Home Screen --------
+
+data class Item(
+    val id: Int,
+    val title: String,
+    val isFavourite: Boolean = false
+)
+
+@Composable
+fun HomeScreen() {
+    var items by remember {
+        mutableStateOf(
+            listOf(
+                Item(1, "Item One"),
+                Item(2, "Item Two"),
+                Item(3, "Item Three")
+            )
+        )
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = "Home",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        LazyColumn {
+            items(items) { item ->
+                ItemRow(
+                    item = item,
+                    onFavouriteToggle = {
+                        items = items.map {
+                            if (it.id == item.id) it.copy(isFavourite = !it.isFavourite)
+                            else it
+                        }
+                    }
+                )
             }
         }
     }
 }
 
-// Preview in Android Studio
-@Preview(showBackground = true)
 @Composable
-fun PreviewNewsList() {
-    NewsList(
-        listOf(
-            News("Sample 1", "Description 1"),
-            News("Sample 2", "Description 2")
+fun ItemRow(item: Item, onFavouriteToggle: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = item.title,
+            modifier = Modifier.weight(1f)
         )
-    )
+
+        Text(
+            text = if (item.isFavourite) "★" else "☆",
+            modifier = Modifier
+                .clickable { onFavouriteToggle() }
+                .padding(8.dp)
+        )
+    }
 }
