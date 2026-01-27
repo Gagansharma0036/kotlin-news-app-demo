@@ -14,9 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
 // -------- Main Activity (Android entry point) --------
@@ -99,12 +96,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
             onValueChange = { password = it }, // updates password state
             label = { Text("Password") },
 
-            // Masks password characters (●●●)
-            visualTransformation = PasswordVisualTransformation(),
-
-            // Shows password keyboard on device
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-
             // Same error state as username field
             isError = errorMessage != null
         )
@@ -149,6 +140,7 @@ data class Item(
     val isFavourite: Boolean = false
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(onLogout: () -> Unit) {
     // List of items stored as Compose state
